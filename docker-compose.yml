@@ -1,0 +1,46 @@
+version: '3'
+volumes:
+  minio-data:
+
+services:
+  postgres:
+    hostname: postgres
+    image: postgres:9.3
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: test
+  zookeeper:
+    hostname: zookeeper
+    image: zookeeper
+    ports:
+      - 2181:2181
+  kafka:
+    hostname: kafka
+    image: wurstmeister/kafka
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  minio:
+    hostname: minio
+    image: minio/minio
+    volumes:
+      - minio-data:/data
+    environment:
+      MINIO_ACCESS_KEY: AKEYTESTXXXXXXXXXXXX
+      MINIO_SECRET_KEY: SKEYTESTXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    ports:
+      - 9000:9000
+    command: minio server /data
